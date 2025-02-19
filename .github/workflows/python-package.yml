@@ -1,0 +1,37 @@
+name: Python package
+
+on:
+  push:
+    branches: [main, "release/*"]
+  pull_request:
+    branches: [main, "release/*"]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: '${{ matrix.python-version }}'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install hatch pytest pytest-flake8 flake8 hatchling
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Lint with flake8
+      run: |
+        flake8 . -v
+    - name: Build package
+      run: |
+        hatchling build
+    - name: Run tests
+      run: |
+        pytest
