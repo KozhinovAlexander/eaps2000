@@ -114,7 +114,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       run: >-
         gh release create
-        "$GITHUB_REF_NAME"
+        "$GITHUB_REF_NAME-py${{ matrix.python-version }}"
         --repo "$GITHUB_REPOSITORY"
         --notes ""
     - name: Upload artifact signatures to GitHub Release
@@ -125,5 +125,5 @@ jobs:
       # sigstore-produced signatures and certificates.
       run: >-
         gh release upload
-        "$GITHUB_REF_NAME" dist/**
+        "$GITHUB_REF_NAME-py${{ matrix.python-version }}" dist/**
         --repo "$GITHUB_REPOSITORY"
