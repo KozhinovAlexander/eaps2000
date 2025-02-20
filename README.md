@@ -29,8 +29,22 @@ pip install eaps2000
 Using CLI interface:
 
 ```bash
+
+# Showing help
 eaps2000 --help
+
+# Show device info and current state
+eaps2000 -p COM123 --info
+
+# Set output voltage to 3.3V, current to 1.3A, output off:
+eaps2000 -p COM3 -V 3.5 -I 1.3 --off
+
+# Set output voltage to 3.3V, current to 1.3A, output on:
+# CAUTION: This command will apply power to the output!
+eaps2000 -p COM3 -V 3.5 -I 1.3 --on
 ```
+
+**NOTE:** Instead `COM123` port a port `/tty/usbACM0` shall be used on Linux.
 
 Using Python interface:
 
