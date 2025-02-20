@@ -1,27 +1,64 @@
+[build-system]
+requires = ['hatchling', 'versioningit']
+build-backend = 'hatchling.build'
+
+[tool.hatch.version]
+source = 'versioningit'
+
+[tool.versioningit]
+default-version = '0.0.0+unknown'
+
+[tool.versioningit.format]
+distance = '{next_version}.dev{distance}+{vcs}{rev}'
+dirty = '{version}+dirty'
+distance-dirty = '{next_version}.dev{distance}+{vcs}{rev}.dirty'
+
 [project]
 name = 'eaps2000'
-version = '0.1.0'
+dynamic = ['version', 'package']
 description = 'Elektro-Automatik Series PS 2000 Python Controller'
 authors = [
     {name = 'Alexander Kozhinov', email = 'ak.alexander.kozhinov@gmail.com'}
 ]
 license = 'Apache-2.0'
-dependencies = [
-    "pyserial>=3.5",
+license-files = ['LICEN[CS]E.*']
+readme = {file = 'README.md', content-type = 'text/markdown'}
+keywords = [
+    'psu', 'pypi-package', 'ea-ps-2342-06b', 'ea-ps-2342-10b',
+    'ea-ps-2384-05b', 'ea-ps-2042-06b', 'ea-ps-2042-10b', 'ea-ps-2042-20b',
+    'ea-ps-2084-03b', 'ea-ps-2084-05b', 'series-ps-2000-b',
+    'psu-controller', 'python-psu-controller', 'ds-power-supply'
 ]
+requires-python = '>= 3.8'
+dependencies = [
+    'pyserial>=3.5',
+]
+classifiers = [
+  'Development Status :: 5 - Production/Stable',
+  'Programming Language :: Python'
+]
+
+[project.urls]
+Homepage = 'https://github.com/KozhinovAlexander/eaps2000'
+Documentation = 'https://github.com/KozhinovAlexander/eaps2000/blob/main/README.md'
 
 [tool.hatch.build.targets.sdist]
 exclude = ['.gitignore', '.github', '.flake8']
 
 [tool.hatch.build.targets.wheel]
 exclude = ['.gitignore', '.github', '.flake8']
+sources = ['eaps2000.py']
 
 [project.optional-dependencies]
 dev = [
     'pytest>=6.2.2',
     'flake8>=7.1.2',
+    'pytest-flake8>=1.3.0',
+    'versioningit>=3.1.2',
 ]
 
-[build-system]
-requires = ['hatchling', 'hatch-requirements-txt']
-build-backend = 'hatchling.build'
+[project.scripts]
+eaps2000 = 'eaps2000:main'
+
+[tool.hatch.build]
+only-packages = true
