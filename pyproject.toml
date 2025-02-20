@@ -1,0 +1,27 @@
+[project]
+name = 'eaps2000'
+version = '0.1.0'
+description = 'Elektro-Automatik Series PS 2000 Python Controller'
+authors = [
+    {name = 'Alexander Kozhinov', email = 'ak.alexander.kozhinov@gmail.com'}
+]
+license = 'Apache-2.0'
+dependencies = [
+    "pyserial>=3.5",
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = ['.gitignore', '.github', '.flake8']
+
+[tool.hatch.build.targets.wheel]
+exclude = ['.gitignore', '.github', '.flake8']
+
+[project.optional-dependencies]
+dev = [
+    'pytest>=6.2.2',
+    'flake8>=7.1.2',
+]
+
+[build-system]
+requires = ['hatchling', 'hatch-requirements-txt']
+build-backend = 'hatchling.build'
