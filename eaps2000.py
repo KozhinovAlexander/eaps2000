@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 '''
 Elektro-Automatik Series PS 2000 Python Controller
@@ -23,6 +23,8 @@ Author: Alexander Kozhinov <ak.alexander.kozhinov@gmail.com>
 import argparse
 import serial
 import struct
+import sys
+from importlib.metadata import version
 
 
 class eaps2k(object):
@@ -54,18 +56,31 @@ class eaps2k(object):
         self._i_nom = self.get_nominal_current()
 
     @staticmethod
+    def pkg_version() -> str:
+        '''
+        Returns this packgae version
+        '''
+        ver = '0.0.0'
+        try:
+            ver = version(__name__)
+        except Exception:
+            pass
+        return ver
+
+    @staticmethod
     def description():
         '''
         Returns description of this module.
         '''
         descr = \
-            'Elektro-Automatik Series PS 2000 Python Controller.' \
-            'License: Apache 2.0' \
-            'Disclaimer: This is NOT an official software made by the manufacturer.' \
-            'IMPORTANT NOTICE: This software is provided as-is. There is NO WARRANTY,' \
-            'NO GUARANTEE of performance, and it is NOT officially endorsed by the manufacturer.' \
-            'Use at your own risk. ' \
-            'Author: Alexander Kozhinov <ak.alexander.kozhinov@gmail.com>'
+            f'{__name__} {eaps2k.pkg_version()}. ' \
+            '\nElektro-Automatik Series PS 2000 Python Controller. ' \
+            '\nLicense: Apache 2.0 ' \
+            '\nDisclaimer: This is NOT an official software made by the manufacturer. ' \
+            '\nIMPORTANT NOTICE: This software is provided as-is. There is NO WARRANTY,' \
+            '\nNO GUARANTEE of performance, and it is NOT officially endorsed by the manufacturer. ' \
+            '\nUse at your own risk. ' \
+            '\nAuthor: Alexander Kozhinov <ak.alexander.kozhinov@gmail.com>'
         return descr
 
     def __enter__(self):
@@ -551,8 +566,10 @@ class eaps2k(object):
         )
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description=eaps2k.description())
+    parser.add_argument('--version', action='version',
+                        version=f'%(prog)s {eaps2k.pkg_version()}')
     parser.add_argument(
         '-p', '--port', type=str, help='serial port to use', required=True)
 
@@ -607,3 +624,7 @@ if __name__ == '__main__':
             ps.set_output_state(not state)
         elif args.info:
             ps.print_info()
+
+
+if __name__ == '__main__':
+    sys.exit(main())
