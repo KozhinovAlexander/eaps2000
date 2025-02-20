@@ -9,9 +9,14 @@ source = 'versioningit'
 default-version = '0.0.0+unknown'
 
 [tool.versioningit.format]
-distance = '{next_version}.dev{distance}+{vcs}{rev}'
-dirty = '{version}+dirty'
-distance-dirty = '{next_version}.dev{distance}+{vcs}{rev}.dirty'
+distance = "{base_version}+{distance}.{vcs}{rev}"
+# Example formatted version: 1.2.3+42.ge174a1f
+
+dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+# Example formatted version: 1.2.3+42.ge174a1f.dirty
+
+distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+# Example formatted version: 1.2.3+42.ge174a1f.dirty
 
 [project]
 name = 'eaps2000'
