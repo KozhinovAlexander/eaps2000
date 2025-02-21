@@ -102,13 +102,13 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: eaps2000-py${{ matrix.python-version }}-${{ github.run_id }}-${{ github.run_number }}
-        path: dist/
+        path: dist/py${{ matrix.python-version }}
     - name: Sign the dists with Sigstore
       uses: sigstore/gh-action-sigstore-python@v3.0.0
       with:
         inputs: >-
-          ./dist/*.tar.gz
-          ./dist/*.whl
+          ./dist/py${{ matrix.python-version }}/*.tar.gz
+          ./dist/py${{ matrix.python-version }}/*.whl
     - name: Create GitHub Release
       env:
         GITHUB_TOKEN: ${{ github.token }}
@@ -125,5 +125,5 @@ jobs:
       # sigstore-produced signatures and certificates.
       run: >-
         gh release upload
-        "$GITHUB_REF_NAME-py${{ matrix.python-version }}" dist/**
+        "$GITHUB_REF_NAME-py${{ matrix.python-version }}" dist/py${{ matrix.python-version }}/**
         --repo "$GITHUB_REPOSITORY"
