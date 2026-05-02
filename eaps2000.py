@@ -23,6 +23,7 @@ Author: Alexander Kozhinov <ak.alexander.kozhinov@gmail.com>
 import argparse
 import serial
 import struct
+import time
 import sys
 from importlib.metadata import version
 
@@ -184,7 +185,7 @@ class eaps2k(object):
         Returns:
             str: A string of hexadecimal values separated by spaces.
         '''
-        return ' '.join(hex(b) for b in bytes_arr)
+        return ' '.join(f'{b:02x}' for b in bytes_arr)
 
     def _transfer(self, telegram_type, node, obj, data,
                   read_buff_len: int = 100) -> bytes:
@@ -205,15 +206,21 @@ class eaps2k(object):
             SystemExit: If the response received is shorter than expected.
         '''
         telegram = eaps2k._construct_telegram(telegram_type, node, obj, data)
+        
+        def build_dbg_msg(name, msg):
+            t = time.time()
+            ms = int((t % 1) * 1000)
+            stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t))
+            return f'[{stamp}.{ms:03d}]: {name:<10}: {eaps2k.bytes2hex(msg)}'
 
         if self._verbosity_lvl >= 3:
-            print(f'-- telegram:\t\t{eaps2k.bytes2hex(telegram)}')
+            print(build_dbg_msg('telegram', telegram))
 
         self.ser_dev.write(telegram)  # send telegram
         ans = self.ser_dev.read(read_buff_len)
 
         if self._verbosity_lvl >= 3:
-            print(f'-- answer:\t\t{eaps2k.bytes2hex(telegram)}')
+            print(build_dbg_msg('answer', ans))
 
         min_len = 5  # 5 bytes is the minimum length of a valid answer
         assert len(ans) >= min_len, \
@@ -549,21 +556,22 @@ class eaps2k(object):
         '''
         dev_class_nr, dev_class_str = self.get_device_class()
         dev_state = self.get_actual()
-        print(
-            f'type    {self.get_type()}\n'
-            f'serial  {self.get_serial()}\n'
-            f'article {self.get_article()}\n'
-            f'manuf   {self.get_manufacturer()}\n'
-            f'version {self.get_version()}\n'
-            f'nom. voltage {self.get_nominal_voltage()}\n'
-            f'nom. current {self.get_nominal_current()}\n'
-            f'nom. power   {self.get_nominal_power()}\n'
-            f'class        {hex(dev_class_nr)} ({dev_class_str})\n'
-            f'OVP          {self.get_ovp()}\n'
-            f'OCP          {self.get_ocp()}\n'
-            f'control      {self.get_control()}\n'
-            f'state        {dev_state}'
-        )
+        info_rows = [
+            ('type', self.get_type()),
+            ('serial', self.get_serial()),
+            ('article', self.get_article()),
+            ('manuf', self.get_manufacturer()),
+            ('version', self.get_version()),
+            ('nom. voltage', self.get_nominal_voltage()),
+            ('nom. current', self.get_nominal_current()),
+            ('nom. power', self.get_nominal_power()),
+            ('class', f'{hex(dev_class_nr)} ({dev_class_str})'),
+            ('OVP', self.get_ovp()),
+            ('OCP', self.get_ocp()),
+            ('control', self.get_control()),
+            ('state', dev_state),
+        ]
+        print('\n'.join(f'{label:<13}: {value}' for label, value in info_rows))
 
 
 def main():
