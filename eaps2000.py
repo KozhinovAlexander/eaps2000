@@ -32,7 +32,7 @@ class eaps2k(object):
     PS_QUERY = 0x40
     PS_SEND = 0xc0
 
-    def __init__(self, port: str, timeout: float = 0.06, baudrate: int = 115200,
+    def __init__(self, port: str, channel: int = 0, timeout: float = 0.06, baudrate: int = 115200,
                  parity: str = serial.PARITY_ODD, verbosity_level=0):
         '''
         Initialize the PS2000 device with the specified serial port settings.
@@ -42,12 +42,14 @@ class eaps2k(object):
             baudrate (int, optional): The baud rate for serial communication. Default is 115200.
             parity (str, optional): The parity bit setting for serial communication. Default is serial.PARITY_ODD.
             verbosity_level (int, optional): The verbosity level for logging. Use 3 to see more information. Default is 0.
+            channel (int, optional): The channel number for the PS2000 device. Default is 0 - always present.
         Attributes:
             _verbose (int): Stores the verbosity level for logging.
             ser_dev (serial.Serial): The serial device object for communication with the PS2000.
             _u_nom (float): The nominal voltage of the PS2000 device.
             _i_nom (float): The nominal current of the PS2000 device.
         '''
+        self._chnr: int = channel  # channel number: only one channel is supported in PS2000B Single and Triple
         self._verbosity_lvl = verbosity_level
         # set timeout to 0.06s to guarantee minimum interval time of 50ms
         self.ser_dev = serial.Serial(port, timeout=timeout, baudrate=baudrate,
@@ -187,7 +189,7 @@ class eaps2k(object):
         '''
         return ' '.join(f'{b:02x}' for b in bytes_arr)
 
-    def _transfer(self, telegram_type, node: int, obj, data,
+    def _transfer(self, telegram_type: int, node: int, obj, data: bytes,
                   read_buff_len: int = 100) -> bytes:
         '''
         Transfers data to and from a serial device.
@@ -206,7 +208,7 @@ class eaps2k(object):
             SystemExit: If the response received is shorter than expected.
         '''
         telegram = eaps2k._construct_telegram(telegram_type, node, obj, data)
-        
+
         def build_dbg_msg(name, msg):
             t = time.time()
             ms = int((t % 1) * 1000)
@@ -238,7 +240,7 @@ class eaps2k(object):
             f'ERROR: Object type shall be one of {allowed_obj_types} ' \
             f'but it is {obj_type if obj_type is not type else type(obj_type)}'
 
-        msg = self._transfer(self.PS_QUERY, 0, obj, '')[3:-2]
+        msg = self._transfer(self.PS_QUERY, self._chnr, obj, b'')[3:-2]
         if obj_type is bytes:
             return msg
         elif obj_type is str:
@@ -258,13 +260,13 @@ class eaps2k(object):
 
         if obj_type is bytes:
             assert mask is not None, f'ERROR: The mask argument value {mask} is not allowed!'
-            ans = self._transfer(self.PS_SEND, 0, obj, [mask, data])
+            ans = self._transfer(self.PS_SEND, self._chnr, obj, bytes([mask, data]))
             return ans[3:-2]
         elif obj_type is int:
-            ans = self._transfer(self.PS_SEND, 0, obj, [int(data) >> 8, int(data) & 0xff])
+            ans = self._transfer(self.PS_SEND, self._chnr, obj, bytes([int(data) >> 8, int(data) & 0xff]))
             return (ans[3] << 8) + ans[4]
         else:
-            assert False, 'ERROR: Unknown!'
+            assert False, f'ERROR: Unknown object type: {obj_type}!'
 
     def get_type(self):
         '''
@@ -581,6 +583,9 @@ def main():
     parser.add_argument(
         '-p', '--port', type=str, help='serial port to use', required=True)
 
+    parser.add_argument('-c', '--channel', help='Select channel', type=int,
+                        choices=range(0, 3), default=0)
+
     default_voltage = None
     default_current = None
     parser.add_argument('-V', '--voltage', type=float, default=default_voltage,
@@ -621,7 +626,7 @@ def main():
     cfg['Iset'] = args.current
     cfg['Vset'] = args.voltage
 
-    with eaps2k(args.port, verbosity_level=args.verbose) as ps:
+    with eaps2k(port=args.port, channel=args.channel, verbosity_level=args.verbose) as ps:
         ps.configure(cfg)  # set configuration do nothing if value(s) is/are None
         if args.on:
             ps.set_output_state(True)
