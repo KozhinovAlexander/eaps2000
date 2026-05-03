@@ -95,7 +95,7 @@ class eaps2k(object):
             print(f'An exception occurred: {exc_value}\nTraceback: {traceback}')
 
     @staticmethod
-    def _construct_telegram(telegram_type, node, obj, data) -> bytearray:
+    def _construct_telegram(telegram_type: int, node: int, obj: int, data: bytes) -> bytearray:
         '''
         Constructs a telegram message for communication.
         Args:
@@ -187,7 +187,7 @@ class eaps2k(object):
         '''
         return ' '.join(f'{b:02x}' for b in bytes_arr)
 
-    def _transfer(self, telegram_type, node, obj, data,
+    def _transfer(self, telegram_type, node: int, obj, data,
                   read_buff_len: int = 100) -> bytes:
         '''
         Transfers data to and from a serial device.
