@@ -65,5 +65,11 @@ dev = [
 [project.scripts]
 eaps2000 = 'eaps2000:main'
 
+[tool.pytest.ini_options]
+markers = [
+    'hardware: tests that require a connected PS 2000B power supply',
+    'hardware_interactive: tests that require user confirmation on real hardware',
+]
+
 [tool.hatch.build]
 only-packages = true

@@ -1,19 +1,23 @@
 - [eaps2000 - PS 2000B Series PSU Python Control Unit](#eaps2000---ps-2000b-series-psu-python-control-unit)
   - [Installing the package](#installing-the-package)
   - [Getting Started](#getting-started)
+    - [Setup Linux Host](#setup-linux-host)
+    - [Using the CLI Interface](#using-the-cli-interface)
+  - [Running Tests](#running-tests)
   - [Building the Project](#building-the-project)
-  - [Documentation form the Manufacturer](#documentation-form-the-manufacturer)
+  - [Documentation from the Manufacturer](#documentation-from-the-manufacturer)
     - [Object List](#object-list)
+- [Debugging the System](#debugging-the-system)
 
 
 # eaps2000 - PS 2000B Series PSU Python Control Unit
 
-The `eaps2000` is a python module for [Elektro-Automatik PS 2000B Series][_ps_2kb_url_] PSU control.
+The `eaps2000` is a Python module for [Elektro-Automatik PS 2000B Series][_ps_2kb_url_] PSU control.
 
-This software implements following functionality:
+This software implements the following functionality:
 
 - Reading out device information (serial number, model etc.)
-- Setting ovewr-voltage and over-current protection
+- Setting over-voltage and over-current protection
 - Setting voltage and current for an output
 - Controlling the output stage on/off
 - Acknowledging alarms
@@ -28,14 +32,46 @@ pip install eaps2000
 
 ## Getting Started
 
-Using CLI interface:
+### Setup Linux Host
+
+Check permissions on `/dev/ttyACM0`
+
+```bash
+ls -l /dev/ttyACM0
+```
+
+Add user to `dialout` group:
+
+```bash
+sudo usermod -aG dialout $USER
+# if your distro uses uucp instead:
+# sudo usermod -aG uucp $USER
+```
+
+Verify your groups:
+
+```bash
+groups
+```
+
+Make sure dialout (or uucp) is listed.
+
+Close all other programs using `/dev/ttyACM0`:
+
+```bash
+lsof /dev/ttyACM0
+```
+
+Reboot your machine.
+
+### Using the CLI Interface
 
 ```bash
 
 # Showing help
 eaps2000 --help
 
-# Show device info and current state
+# Show device info and current state (use /dev/ttyACM0 for Linux-based systems)
 eaps2000 -p COM123 --info
 
 # Set output voltage to 3.3V, current to 1.3A, output off:
@@ -46,14 +82,14 @@ eaps2000 -p COM123 -V 3.5 -I 1.3 --off
 eaps2000 -p COM123 -V 3.5 -I 1.3 --on
 ```
 
-**NOTE:** Instead `COM123` port a port `/tty/usbACM0` shall be used on Linux.
+**NOTE:** On Linux, use a device path such as `/dev/ttyACM0` instead of `COM123`.
 
 Using Python interface:
 
 ```python
 from eaps2000 import eaps2k
 
-port = 'COM123'  # use /tty/ACM0 for linux based system
+port = 'COM123'  # use /dev/ttyACM0 for Linux-based systems
 with eaps2k(port) as ps:
     # Prepare config:
     cfg = eaps2k.get_config_template()
@@ -77,6 +113,43 @@ with eaps2k(port) as ps:
     ps.print_info()
 ```
 
+## Running Tests
+
+Install development dependencies first:
+
+```bash
+pip install -e ".[dev]"
+```
+
+Run unit tests:
+
+```bash
+pytest
+```
+
+Run tests together with flake8 checks (same mode as CI):
+
+```bash
+pytest --flake8
+```
+
+Run hardware tests (requires a connected PSU):
+
+```bash
+EAPS2000_RUN_HW_TESTS=1 \
+EAPS2000_TEST_PORT=/dev/ttyACM0 \
+pytest -m hardware
+```
+
+Run interactive hardware tests:
+
+```bash
+EAPS2000_RUN_HW_TESTS=1 \
+EAPS2000_TEST_PORT=/dev/ttyACM0 \
+EAPS2000_HW_INTERACTIVE_CONFIRM=1 \
+pytest -m hardware_interactive -s
+```
+
 ## Building the Project
 
 The project is built with [`hatchling`][_hatchling_home_]
@@ -85,26 +158,26 @@ The project is built with [`hatchling`][_hatchling_home_]
 pip install hatchling && flake8 . -v && hatchling build && pytest --flake8
 ```
 
-Installing freshly built project may be done by invoking:
+Installing a freshly built project can be done by running:
 
 ```bash
 pip install ./dist/eaps2000-*.whl --upgrade --force-reinstall
 ```
 
-## Documentation form the Manufacturer
+## Documentation from the Manufacturer
 
-The manufacturer `EA ELEKTRO-AUTOMATIK GMBH & CO. KG` has an overview over all
-available models of `PS 2000 B Series` in the shop [Serie PS 2000 B 100 bis 332 W][_ps_2kb_url_]
-on German web-page.
+The manufacturer `EA ELEKTRO-AUTOMATIK GMBH & CO. KG` provides an overview of all
+available `PS 2000 B Series` models in the shop [Serie PS 2000 B 100 bis 332 W][_ps_2kb_url_]
+on its German web page.
 
 The [Programming_Guide_PS2000B_TFT][_ps2kb_programming_guide_] gives an overview of
-the protovol implemented. It also describes voltage/current conversions necessary for the
+the protocol implemented. It also describes voltage/current conversions necessary for the
 communication.
 
 ### Object List
 
 Additional document `object_list_ps2000b_de_en.pdf` mentioned in
-[Programming_Guide_PS2000B_TFT][_ps2kb_programming_guide_] gives an overview over control commands.
+[Programming_Guide_PS2000B_TFT][_ps2kb_programming_guide_] (or [here][_ps2kb_programming_guide_alt0_] and [here][_ps2kb_programming_guide_alt1_]) gives an overview of control commands.
 Each object in the list is basically a get/set command to control the PSU.
 
 The table below lists objects in one place:
@@ -130,6 +203,18 @@ The table below lists objects in one place:
 
 ** PS 2000 B Triple only
 
+# Debugging the System
+
+I very handy CLI option to see messages transfered on the bus is `-vvv`.
+
+The command will show all the bytes transfered to and from the device.
+
+```bash
+eaps2000 -p /dev/ttyACM0 --info -vvv
+```
+
 [_ps_2kb_url_]: https://elektroautomatik.com/shop/de/produkte/programmierbare-dc-laborstromversorgungen/dc-laborstromversorgungen/serie-ps-2000-b-br-100-bis-332-w/
 [_ps2kb_programming_guide_]: https://elektroautomatik.com/shop/media/archive/f1/49/71/Programming_Guide_PS2000B_TFT.zip
+[_ps2kb_programming_guide_alt0_]: https://wiki.cuvoodoo.info/lib/exe/fetch.php?media=ea-ps_2084-03b:ps2000b_programming.pdf
+[_ps2kb_programming_guide_alt1_]: https://wiki.fablab.sorbonne-universite.fr/BookStack/attachments/1542&ved=2ahUKEwjUrbiZxpuUAxWl-QIHHb9cMBgQFnoECB0QAQ&usg=AOvVaw08f6liGdzKGvGxK9XNQWwb
 [_hatchling_home_]: https://hatch.pypa.io/1.9/
