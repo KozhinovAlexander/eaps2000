@@ -9,6 +9,9 @@
     - [Object List](#object-list)
 - [Debugging the System](#debugging-the-system)
 
+<p align="center">
+<img src="./media/eaps2000.gif" alt="EA-PS 2042-20B" width="400">
+</p>
 
 # eaps2000 - PS 2000B Series PSU Python Control Unit
 
